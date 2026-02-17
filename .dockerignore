@@ -1,0 +1,52 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Docker
+docker-compose.yml
+docker-compose.*.yml
+Dockerfile
+.dockerignore
+
+# Documentation
+*.md
+LICENSE
+
+# IDE
+.idea
+.vscode
+*.sublime-project
+*.sublime-workspace
+
+# Node
+node_modules
+npm-debug.log
+yarn-error.log
+package-lock.json
+yarn.lock
+
+# Laravel
+/storage/*.key
+/storage/logs
+/storage/framework/cache/*
+
+/tests
+.phpunit.result.cache
+.phpunit.cache
+
+# Environment
+.env
+.env.backup
+.env.*.backup
+
+# Build files
+/public/hot
+/public/storage
+/public/build
+
+# Vendor (will be installed in container)
+/vendor
+
+# Cache
+/bootstrap/cache/*.php

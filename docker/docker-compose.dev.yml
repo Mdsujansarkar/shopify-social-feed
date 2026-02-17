@@ -1,0 +1,89 @@
+# Development Docker Compose
+# Usage: docker-compose -f docker-compose.dev.yml up -d
+version: '3.9'
+
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.dev
+    container_name: social-feed-dev-app
+    restart: unless-stopped
+    working_dir: /var/www/html
+    volumes:
+      - ../:/var/www/html
+      - ./php/php-dev.ini:/usr/local/etc/php/conf.d/custom.ini
+    networks:
+      - social-feed-dev
+    ports:
+      - "9000:9000"
+    environment:
+      - DB_HOST=postgres-dev
+      - DB_PORT=5432
+      - DB_DATABASE=social_feed_dev
+      - DB_USERNAME=social_feed_user
+      - DB_PASSWORD=secret
+      - REDIS_HOST=redis-dev
+      - CACHE_DRIVER=redis
+      - SESSION_DRIVER=redis
+      - QUEUE_CONNECTION=redis
+
+  nginx:
+    image: nginx:alpine
+    container_name: social-feed-dev-nginx
+    restart: unless-stopped
+    ports:
+      - "8000:80"
+    volumes:
+      - ../:/var/www/html
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/conf.d/app-dev.conf:/etc/nginx/conf.d/default.conf
+    networks:
+      - social-feed-dev
+    depends_on:
+      - app
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: social-feed-dev-postgres
+    restart: unless-stopped
+    ports:
+      - "5433:5432"
+    environment:
+      - POSTGRES_DB=social_feed_dev
+      - POSTGRES_USER=social_feed_user
+      - POSTGRES_PASSWORD=secret
+    volumes:
+      - postgres-dev-data:/var/lib/postgresql/data
+    networks:
+      - social-feed-dev
+
+  redis:
+    image: redis:7-alpine
+    container_name: social-feed-dev-redis
+    restart: unless-stopped
+    ports:
+      - "6380:6379"
+    networks:
+      - social-feed-dev
+
+  worker:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.dev
+    container_name: social-feed-dev-worker
+    restart: unless-stopped
+    working_dir: /var/www/html
+    command: php artisan queue:work --sleep=3 --tries=3 --timeout=90
+    volumes:
+      - ../:/var/www/html
+    networks:
+      - social-feed-dev
+
+networks:
+  social-feed-dev:
+    driver: bridge
+
+volumes:
+  postgres-dev-data:
+    driver: local
