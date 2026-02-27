@@ -33,13 +33,13 @@ services:
     container_name: social-feed-nginx
     restart: unless-stopped
     ports:
-      - "80:80"
-      - "443:443"
+      - "8080:80"
+      - "8443:443"
     volumes:
       - ./:/var/www/html
       - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf
       - ./docker/nginx/conf.d:/etc/nginx/conf.d
-      - ./docker/ssl/self-signed:/etc/nginx/ssl:ro
+      - ./docker/ssl/local:/etc/nginx/ssl:ro
     networks:
       - social-feed-network
     depends_on:
@@ -50,8 +50,6 @@ services:
     image: postgres:16-alpine
     container_name: social-feed-postgres
     restart: unless-stopped
-    ports:
-      - "5432:5432"
     environment:
       - POSTGRES_DB=${DB_DATABASE:-social_feed}
       - POSTGRES_USER=${DB_USERNAME:-social_feed_user}
@@ -72,8 +70,6 @@ services:
     image: redis:7-alpine
     container_name: social-feed-redis
     restart: unless-stopped
-    ports:
-      - "6380:6379"
     volumes:
       - redis-data:/data
     networks:
