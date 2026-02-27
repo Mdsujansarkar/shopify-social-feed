@@ -41,8 +41,7 @@ services:
       - ./:/var/www/html
       - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf
       - ./docker/nginx/conf.d:/etc/nginx/conf.d
-      - ./docker/ssl/certbot/conf:/etc/letsencrypt
-      - ./docker/ssl/certbot/www:/var/www/certbot
+      - ./docker/ssl/self-signed:/etc/nginx/ssl:ro
     networks:
       - social-feed-network
     depends_on:
@@ -145,17 +144,6 @@ services:
     depends_on:
       - postgres
       - redis
-
-  # Certbot for SSL (Let's Encrypt)
-  certbot:
-    image: certbot/certbot:latest
-    container_name: social-feed-certbot
-    volumes:
-      - ./docker/ssl/certbot/conf:/etc/letsencrypt
-      - ./docker/ssl/certbot/www:/var/www/certbot
-    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
-    networks:
-      - social-feed-network
 
 networks:
   social-feed-network:
