@@ -1,5 +1,3 @@
-version: '3.9'
-
 services:
   # PHP-FPM Application
   app:
@@ -75,7 +73,7 @@ services:
     container_name: social-feed-redis
     restart: unless-stopped
     ports:
-      - "6379:6379"
+      - "6380:6379"
     volumes:
       - redis-data:/data
     networks:
