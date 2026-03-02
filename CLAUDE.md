@@ -18,16 +18,19 @@ docker compose up -d --build
 
 # View logs
 docker compose logs -f app
+docker compose logs -f worker
+docker compose logs -f scheduler
 
 # Run commands inside container
 docker compose exec app php artisan migrate
 docker compose exec app php artisan queue:work
 docker compose exec app composer install
+docker compose exec app php artisan schedule:run
 ```
 
 ### Local development
 ```bash
-# Full development stack (server, queue, logs, vite)
+# Full development stack (runs server, queue, logs, vite in parallel)
 composer run dev
 
 # Setup fresh installation
@@ -128,8 +131,32 @@ INSTAGRAM_REDIRECT_URI=http://localhost:8000/instagram/callback
 - Jobs: `app/Jobs/SyncInstagramMediaJob.php` - Async media sync
 - Docker: `docker-compose.yml` defines multi-service stack with health checks
 
+## Docker Services
+
+The application runs in 6 containers:
+- **app**: PHP-FPM application server
+- **nginx**: Web server (ports 3000→80, 3443→443)
+- **postgres**: PostgreSQL 16 database
+- **redis**: Redis 7 for cache/queue/sessions
+- **worker**: Queue worker (`php artisan queue:work --sleep=3 --tries=3 --timeout=90`)
+- **scheduler**: Task scheduler (runs `php artisan schedule:run` every 60 seconds)
+
 ## Common Issues
 
 - **"No Instagram business accounts found"**: User's Instagram is not Professional account OR not linked to Facebook Page
 - **"Invalid HMAC signature"**: `SHOPIFY_API_SECRET` mismatch or missing params in HMAC calculation
 - **Token expires after 60 days**: Use `/dashboard/refresh-token` endpoint or create scheduled task
+- **Shop domain validation fails**: Domain must match pattern `*.myshopify.com` (e.g., `store.myshopify.com`)
+- **OAuth state token expired**: State tokens auto-expire after 10 minutes - user must restart OAuth flow
+
+## Key Services and Models
+
+### Services
+- **ShopifyService** (`app/Services/ShopifyService.php`): Handles Shopify OAuth, HMAC verification, token exchange, shop data fetching, and API requests. Contains `verifyHmac()` critical security method.
+- **InstagramService** (`app/Services/InstagramService.php`): Handles Facebook Login OAuth, token exchange (short-lived → long-lived), Instagram business account discovery, media syncing, and token refresh.
+
+### Models
+- **Shop**: Represents Shopify stores. Key methods: `findByDomain()`, `activate()`, `deactivate()`. HasOne relationship to InstagramAccount.
+- **InstagramAccount**: Represents connected Instagram business accounts. Key methods: `isTokenExpired()`, `willTokenExpireIn()`. Accessor attributes: `username`, `profile_picture_url`, `followers_count`.
+- **InstagramMedia**: Represents synced Instagram posts. Scopes: `images()`, `videos()`, `carousels()`, `orderByLikes()`. Static method: `syncOrCreate()`.
+- **OAuthState**: Prevents CSRF attacks during Instagram OAuth. Auto-expires after 10 minutes (checked via timestamp).

@@ -5,6 +5,11 @@ use App\Http\Controllers\ShopifyAuthController;
 use App\Http\Controllers\InstagramAuthController;
 use App\Http\Controllers\DashboardController;
 
+// Load test routes (only in local/debug mode)
+if (config('app.debug')) {
+    require __DIR__.'/test.php';
+}
+
 // Welcome / Landing page
 Route::get('/', function () {
     return view('welcome');

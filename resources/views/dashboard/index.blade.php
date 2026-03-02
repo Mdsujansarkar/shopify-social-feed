@@ -24,6 +24,16 @@
     </nav>
 
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Hello Instagram Greeting -->
+        <div class="bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg shadow-md p-6 mb-6">
+            <h1 class="text-3xl font-bold text-white">
+                Hello Instagram
+            </h1>
+            <p class="text-purple-100 mt-2">
+                Shop domain: https://{{ $shop->shop_domain }}
+            </p>
+        </div>
+
         @session('success')
             <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded mb-6">
                 {{ session('success') }}
